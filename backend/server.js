@@ -8,8 +8,16 @@ const itemRoutes = require('./src/routes/items');
 
 const app = express();
 
+// ── CORS — allow all origins (Vercel, localhost, etc.) ──────────────────────
+const corsOptions = {
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // handle pre-flight requests
+
 // Middleware
-app.use(cors());
 app.use(express.json());
 
 // Routes
