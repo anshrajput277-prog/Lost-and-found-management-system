@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://lost-and-found-management-system-t0cs.onrender.com',
+  baseURL: 'https://lost-and-found-management-system-t0cs.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
