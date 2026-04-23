@@ -2,26 +2,28 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/axios';
 
-// ─── Navbar Component ────────────────────────────────────────────────────────
+// ─── Navbar ───────────────────────────────────────────────────────────────────
 function Navbar({ user, onLogout }) {
   const initials = user?.name
-    ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U';
 
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <div className="brand-icon">🔍</div>
-        <div>
-          <h1>Lost &amp; Found</h1>
-          <span>Campus Item Management</span>
+        <div className="brand-icon-wrap">
+          <div className="brand-icon">🔍</div>
+        </div>
+        <div className="brand-text">
+          <h1 className="gradient-text">Lost &amp; Found</h1>
+          <span>Campus Management Portal</span>
         </div>
       </div>
 
       <div className="navbar-right">
-        <div className="user-badge">
+        <div className="user-pill">
           <div className="user-avatar">{initials}</div>
-          <span>{user?.name || 'Student'}</span>
+          <span className="user-pill-name">{user?.name || 'Student'}</span>
         </div>
         <button id="logout-btn" className="btn-logout" onClick={onLogout}>
           🚪 Logout
@@ -31,7 +33,7 @@ function Navbar({ user, onLogout }) {
   );
 }
 
-// ─── Item Card Component ──────────────────────────────────────────────────────
+// ─── Item Card ────────────────────────────────────────────────────────────────
 function ItemCard({ item, currentUserId, onEdit, onDelete }) {
   const isOwner = item.postedBy?._id === currentUserId;
   const date = new Date(item.date).toLocaleDateString('en-IN', {
@@ -40,49 +42,27 @@ function ItemCard({ item, currentUserId, onEdit, onDelete }) {
 
   return (
     <div className={`item-card ${item.type.toLowerCase()}`}>
-      <div className="item-card-header">
+      <div className="item-card-head">
         <h3>{item.itemName}</h3>
         <span className={`badge badge-${item.type.toLowerCase()}`}>{item.type}</span>
       </div>
 
-      <div className="item-card-meta">
-        <div className="item-meta-row">
-          <span className="meta-icon">📍</span>
-          <span>{item.location}</span>
-        </div>
-        <div className="item-meta-row">
-          <span className="meta-icon">📅</span>
-          <span>{date}</span>
-        </div>
-        <div className="item-meta-row">
-          <span className="meta-icon">📞</span>
-          <span>{item.contactInfo}</span>
-        </div>
+      <div className="item-meta">
+        <div className="meta-row"><span className="mi">📍</span>{item.location}</div>
+        <div className="meta-row"><span className="mi">📅</span>{date}</div>
+        <div className="meta-row"><span className="mi">📞</span>{item.contactInfo}</div>
       </div>
 
-      <p className="item-description">{item.description}</p>
+      <p className="item-desc">{item.description}</p>
 
-      <div className="item-card-footer">
+      <div className="item-card-foot">
         <div className="item-poster">
-          By <span>{item.postedBy?.name || 'Unknown'}</span>
+          By <strong>{item.postedBy?.name || 'Unknown'}</strong>
         </div>
-
         {isOwner && (
           <div className="item-actions">
-            <button
-              className="btn btn-icon-sm"
-              title="Edit item"
-              onClick={() => onEdit(item)}
-            >
-              ✏️ Edit
-            </button>
-            <button
-              className="btn btn-danger-sm"
-              title="Delete item"
-              onClick={() => onDelete(item._id)}
-            >
-              🗑️ Del
-            </button>
+            <button className="btn btn-icon-sm" onClick={() => onEdit(item)}>✏️ Edit</button>
+            <button className="btn btn-danger-sm" onClick={() => onDelete(item._id)}>🗑️ Del</button>
           </div>
         )}
       </div>
@@ -90,9 +70,9 @@ function ItemCard({ item, currentUserId, onEdit, onDelete }) {
   );
 }
 
-// ─── Edit Modal Component ─────────────────────────────────────────────────────
+// ─── Edit Modal ───────────────────────────────────────────────────────────────
 function EditModal({ item, onClose, onSuccess }) {
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     itemName: item.itemName || '',
     description: item.description || '',
     type: item.type || 'Lost',
@@ -103,15 +83,13 @@ function EditModal({ item, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
-      await api.put(`/items/${item._id}`, formData);
+      await api.put(`/items/${item._id}`, form);
       onSuccess();
     } catch (err) {
       setError(err.response?.data?.message || 'Update failed');
@@ -121,31 +99,24 @@ function EditModal({ item, onClose, onSuccess }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
-        <div className="modal-header">
+        <div className="modal-head">
           <h2>✏️ Edit Item</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
-        {error && <div className="alert alert-error">⚠️ {error}</div>}
+        {error && <div className="alert alert-error"><span>⚠️</span>{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="edit-itemName">Item Name</label>
-              <input
-                id="edit-itemName"
-                type="text"
-                name="itemName"
-                value={formData.itemName}
-                onChange={handleChange}
-                required
-              />
+              <label htmlFor="e-name">Item Name</label>
+              <input id="e-name" type="text" name="itemName" value={form.itemName} onChange={handleChange} required />
             </div>
             <div className="form-group">
-              <label htmlFor="edit-type">Type</label>
-              <select id="edit-type" name="type" value={formData.type} onChange={handleChange}>
+              <label htmlFor="e-type">Type</label>
+              <select id="e-type" name="type" value={form.type} onChange={handleChange}>
                 <option value="Lost">Lost</option>
                 <option value="Found">Found</option>
               </select>
@@ -153,63 +124,30 @@ function EditModal({ item, onClose, onSuccess }) {
           </div>
 
           <div className="form-group">
-            <label htmlFor="edit-description">Description</label>
-            <textarea
-              id="edit-description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-            />
+            <label htmlFor="e-desc">Description</label>
+            <textarea id="e-desc" name="description" value={form.description} onChange={handleChange} required />
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="edit-location">Location</label>
-              <input
-                id="edit-location"
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                required
-              />
+              <label htmlFor="e-loc">Location</label>
+              <input id="e-loc" type="text" name="location" value={form.location} onChange={handleChange} required />
             </div>
             <div className="form-group">
-              <label htmlFor="edit-date">Date</label>
-              <input
-                id="edit-date"
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-              />
+              <label htmlFor="e-date">Date</label>
+              <input id="e-date" type="date" name="date" value={form.date} onChange={handleChange} />
             </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="edit-contactInfo">Contact Info</label>
-            <input
-              id="edit-contactInfo"
-              type="text"
-              name="contactInfo"
-              value={formData.contactInfo}
-              onChange={handleChange}
-              required
-            />
+            <label htmlFor="e-contact">Contact Info</label>
+            <input id="e-contact" type="text" name="contactInfo" value={form.contactInfo} onChange={handleChange} required />
           </div>
 
           <div className="modal-actions">
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>Cancel</button>
             <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              id="edit-submit-btn"
+              id="edit-save-btn"
               type="submit"
               className={`btn btn-primary${loading ? ' btn-loading' : ''}`}
               disabled={loading}
@@ -223,321 +161,277 @@ function EditModal({ item, onClose, onSuccess }) {
   );
 }
 
-// ─── Dashboard Page ───────────────────────────────────────────────────────────
+// ─── Dashboard ────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems]         = useState([]);
+  const [loading, setLoading]     = useState(true);
   const [addLoading, setAddLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [editItem, setEditItem] = useState(null);
-  const [addError, setAddError] = useState('');
+  const [searchQ, setSearchQ]     = useState('');
+  const [filter, setFilter]       = useState('All');
+  const [editItem, setEditItem]   = useState(null);
+  const [addError, setAddError]   = useState('');
   const [addSuccess, setAddSuccess] = useState('');
 
-  const [addForm, setAddForm] = useState({
-    itemName: '',
-    description: '',
-    type: 'Lost',
-    location: '',
-    contactInfo: '',
+  const [form, setForm] = useState({
+    itemName: '', description: '', type: 'Lost',
+    location: '', contactInfo: '',
     date: new Date().toISOString().slice(0, 10),
   });
 
-  // ── Fetch All Items ────────────────────────────────────────────────────────
+  // Fetch
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get('/items');
       setItems(res.data.items || []);
-    } catch (err) {
-      console.error('Fetch items error:', err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+  useEffect(() => { fetchItems(); }, [fetchItems]);
 
-  // ── Search ─────────────────────────────────────────────────────────────────
+  // Search
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return fetchItems();
+    if (!searchQ.trim()) return fetchItems();
     setLoading(true);
     try {
-      const res = await api.get(`/items/search?name=${encodeURIComponent(searchQuery)}`);
+      const res = await api.get(`/items/search?name=${encodeURIComponent(searchQ)}`);
       setItems(res.data.items || []);
-    } catch (err) {
-      console.error('Search error:', err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   };
 
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    fetchItems();
+  const clearSearch = () => { setSearchQ(''); fetchItems(); };
+
+  // Add
+  const handleFormChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setAddError(''); setAddSuccess('');
   };
 
-  // ── Add Item ───────────────────────────────────────────────────────────────
-  const handleAddChange = (e) => {
-    setAddForm({ ...addForm, [e.target.name]: e.target.value });
-    setAddError('');
-    setAddSuccess('');
-  };
-
-  const handleAddSubmit = async (e) => {
+  const handleAddSubmit = async e => {
     e.preventDefault();
-    const { itemName, description, type, location, contactInfo } = addForm;
-    if (!itemName || !description || !type || !location || !contactInfo) {
+    const { itemName, description, type, location, contactInfo } = form;
+    if (!itemName || !description || !type || !location || !contactInfo)
       return setAddError('All fields are required');
-    }
 
-    setAddLoading(true);
-    setAddError('');
-    setAddSuccess('');
+    setAddLoading(true); setAddError(''); setAddSuccess('');
     try {
-      await api.post('/items', addForm);
+      await api.post('/items', form);
       setAddSuccess('✅ Item reported successfully!');
-      setAddForm({
-        itemName: '', description: '', type: 'Lost',
-        location: '', contactInfo: '',
-        date: new Date().toISOString().slice(0, 10),
-      });
+      setForm({ itemName: '', description: '', type: 'Lost', location: '', contactInfo: '',
+        date: new Date().toISOString().slice(0, 10) });
       fetchItems();
-      setTimeout(() => setAddSuccess(''), 3000);
+      setTimeout(() => setAddSuccess(''), 3500);
     } catch (err) {
       setAddError(err.response?.data?.message || 'Failed to report item');
-    } finally {
-      setAddLoading(false);
-    }
+    } finally { setAddLoading(false); }
   };
 
-  // ── Delete Item ────────────────────────────────────────────────────────────
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this item?')) return;
+  // Delete
+  const handleDelete = async id => {
+    if (!window.confirm('Delete this item? This cannot be undone.')) return;
     try {
       await api.delete(`/items/${id}`);
-      setItems((prev) => prev.filter((item) => item._id !== id));
+      setItems(prev => prev.filter(i => i._id !== id));
     } catch (err) {
       alert(err.response?.data?.message || 'Delete failed');
     }
   };
 
-  // ── Logout ─────────────────────────────────────────────────────────────────
+  // Logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
   };
 
-  // ── Filtered Items ─────────────────────────────────────────────────────────
-  const filteredItems = activeFilter === 'All'
-    ? items
-    : items.filter((item) => item.type === activeFilter);
-
-  const lostCount = items.filter((i) => i.type === 'Lost').length;
-  const foundCount = items.filter((i) => i.type === 'Found').length;
+  const filtered = filter === 'All' ? items : items.filter(i => i.type === filter);
+  const lostCount  = items.filter(i => i.type === 'Lost').length;
+  const foundCount = items.filter(i => i.type === 'Found').length;
 
   return (
-    <div className="dashboard-page">
-      <Navbar user={user} onLogout={handleLogout} />
+    <>
+      {/* Animated BG */}
+      <div className="bg-aurora" />
+      <div className="bg-orb bg-orb-1" />
+      <div className="bg-orb bg-orb-2" />
+      <div className="bg-noise" />
 
-      <div className="dashboard-main">
-        {/* ── LEFT PANEL: Add Item Form ──────────────────────────────── */}
-        <aside>
-          <div className="panel">
-            <h2><span className="panel-icon">📋</span> Report an Item</h2>
+      <div className="dashboard-page">
+        <Navbar user={user} onLogout={handleLogout} />
 
-            {addError && <div className="alert alert-error">⚠️ {addError}</div>}
-            {addSuccess && <div className="alert alert-success">{addSuccess}</div>}
+        <div className="dashboard-body">
 
-            <form onSubmit={handleAddSubmit} noValidate>
-              <div className="form-group">
-                <label htmlFor="add-itemName">Item Name</label>
-                <input
-                  id="add-itemName"
-                  type="text"
-                  name="itemName"
-                  placeholder="e.g. Blue Backpack"
-                  value={addForm.itemName}
-                  onChange={handleAddChange}
-                />
+          {/* ── LEFT: Add Form ──────────────────────────────────── */}
+          <aside>
+            <div className="panel">
+              <div className="panel-title">
+                <div className="panel-title-icon">📋</div>
+                Report an Item
               </div>
 
-              <div className="form-row">
+              {addError   && <div className="alert alert-error"><span>⚠️</span>{addError}</div>}
+              {addSuccess && <div className="alert alert-success">{addSuccess}</div>}
+
+              <form onSubmit={handleAddSubmit} noValidate>
                 <div className="form-group">
-                  <label htmlFor="add-type">Type</label>
-                  <select id="add-type" name="type" value={addForm.type} onChange={handleAddChange}>
-                    <option value="Lost">🔴 Lost</option>
-                    <option value="Found">🟢 Found</option>
-                  </select>
+                  <label htmlFor="a-name">Item Name</label>
+                  <div className="input-wrap">
+                    <input id="a-name" type="text" name="itemName" className="with-icon"
+                      placeholder="e.g. Blue Nike Backpack"
+                      value={form.itemName} onChange={handleFormChange} />
+                    <span className="input-icon">📦</span>
+                  </div>
                 </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="a-type">Type</label>
+                    <select id="a-type" name="type" value={form.type} onChange={handleFormChange}>
+                      <option value="Lost">🔴 Lost</option>
+                      <option value="Found">🟢 Found</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="a-date">Date</label>
+                    <input id="a-date" type="date" name="date" value={form.date} onChange={handleFormChange} />
+                  </div>
+                </div>
+
                 <div className="form-group">
-                  <label htmlFor="add-date">Date</label>
-                  <input
-                    id="add-date"
-                    type="date"
-                    name="date"
-                    value={addForm.date}
-                    onChange={handleAddChange}
+                  <label htmlFor="a-desc">Description</label>
+                  <textarea id="a-desc" name="description"
+                    placeholder="Color, brand, identifying features..."
+                    value={form.description} onChange={handleFormChange} rows={3} />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="a-loc">Location</label>
+                  <div className="input-wrap">
+                    <input id="a-loc" type="text" name="location" className="with-icon"
+                      placeholder="e.g. Library 2nd Floor"
+                      value={form.location} onChange={handleFormChange} />
+                    <span className="input-icon">📍</span>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="a-contact">Contact Info</label>
+                  <div className="input-wrap">
+                    <input id="a-contact" type="text" name="contactInfo" className="with-icon"
+                      placeholder="Phone or email"
+                      value={form.contactInfo} onChange={handleFormChange} />
+                    <span className="input-icon">📞</span>
+                  </div>
+                </div>
+
+                <button
+                  id="add-item-btn"
+                  type="submit"
+                  className={`btn btn-primary${addLoading ? ' btn-loading' : ''}`}
+                  disabled={addLoading}
+                >
+                  {!addLoading && '📌 Submit Report'}
+                </button>
+              </form>
+            </div>
+          </aside>
+
+          {/* ── RIGHT: Items ────────────────────────────────────── */}
+          <main>
+            {/* Stats */}
+            <div className="stats-row">
+              <div className="stat-pill total">📦 {items.length} Total</div>
+              <div className="stat-pill lost">🔴 {lostCount} Lost</div>
+              <div className="stat-pill found">🟢 {foundCount} Found</div>
+            </div>
+
+            {/* Search */}
+            <div className="search-wrap">
+              <div className="search-field">
+                <span className="s-icon">🔍</span>
+                <input
+                  id="search-input"
+                  type="text"
+                  placeholder="Search by name, location, type..."
+                  value={searchQ}
+                  onChange={e => setSearchQ(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                />
+              </div>
+              <button id="search-btn" className="btn-search" onClick={handleSearch}>Search</button>
+              {searchQ && (
+                <button className="btn-clear-search" onClick={clearSearch}>✕ Clear</button>
+              )}
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="filter-tabs">
+              {[
+                { label: '📦 All',    val: 'All',   cls: 'active-all'   },
+                { label: '🔴 Lost',   val: 'Lost',  cls: 'active-lost'  },
+                { label: '🟢 Found',  val: 'Found', cls: 'active-found' },
+              ].map(t => (
+                <button
+                  key={t.val}
+                  className={`ftab ${filter === t.val ? t.cls : ''}`}
+                  onClick={() => setFilter(t.val)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Section Header */}
+            <div className="section-hdr">
+              <h2>Reported Items</h2>
+              <span className="count-badge">{filtered.length} items</span>
+            </div>
+
+            {/* Grid */}
+            <div className="items-grid">
+              {loading ? (
+                <div className="loading-wrap">
+                  <div className="spinner-ring" />
+                  <p>Loading items...</p>
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">📭</div>
+                  <h3>No items found</h3>
+                  <p>
+                    {searchQ
+                      ? `No results for "${searchQ}". Try a different keyword.`
+                      : 'Nothing here yet — be the first to report an item!'}
+                  </p>
+                </div>
+              ) : (
+                filtered.map(item => (
+                  <ItemCard
+                    key={item._id}
+                    item={item}
+                    currentUserId={user?.id}
+                    onEdit={setEditItem}
+                    onDelete={handleDelete}
                   />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="add-description">Description</label>
-                <textarea
-                  id="add-description"
-                  name="description"
-                  placeholder="Brief description (color, brand, special features...)"
-                  value={addForm.description}
-                  onChange={handleAddChange}
-                  rows={3}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="add-location">Location</label>
-                <input
-                  id="add-location"
-                  type="text"
-                  name="location"
-                  placeholder="e.g. Library 2nd Floor"
-                  value={addForm.location}
-                  onChange={handleAddChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="add-contactInfo">Contact Info</label>
-                <input
-                  id="add-contactInfo"
-                  type="text"
-                  name="contactInfo"
-                  placeholder="Phone or email"
-                  value={addForm.contactInfo}
-                  onChange={handleAddChange}
-                />
-              </div>
-
-              <button
-                id="add-item-btn"
-                type="submit"
-                className={`btn btn-primary${addLoading ? ' btn-loading' : ''}`}
-                disabled={addLoading}
-              >
-                {!addLoading && '📌 Submit Report'}
-              </button>
-            </form>
-          </div>
-        </aside>
-
-        {/* ── RIGHT PANEL: Items List ────────────────────────────────── */}
-        <main>
-          {/* Stats */}
-          <div className="stats-bar">
-            <div className="stat-chip total">
-              📦 {items.length} Total
+                ))
+              )}
             </div>
-            <div className="stat-chip lost">
-              🔴 {lostCount} Lost
-            </div>
-            <div className="stat-chip found">
-              🟢 {foundCount} Found
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="search-bar">
-            <input
-              id="search-input"
-              type="text"
-              placeholder="🔍  Search by name, location, type..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <button id="search-btn" onClick={handleSearch}>Search</button>
-            {searchQuery && (
-              <button className="btn-clear" onClick={handleClearSearch}>
-                ✕ Clear
-              </button>
-            )}
-          </div>
-
-          {/* Filter Tabs */}
-          <div className="filter-tabs">
-            {['All', 'Lost', 'Found'].map((tab) => (
-              <button
-                key={tab}
-                className={`filter-tab ${
-                  activeFilter === tab
-                    ? tab === 'All'
-                      ? 'active'
-                      : tab === 'Lost'
-                      ? 'active-lost'
-                      : 'active-found'
-                    : ''
-                }`}
-                onClick={() => setActiveFilter(tab)}
-              >
-                {tab === 'All' ? '📦 All' : tab === 'Lost' ? '🔴 Lost' : '🟢 Found'}
-              </button>
-            ))}
-          </div>
-
-          {/* Section Header */}
-          <div className="section-header">
-            <h2>Reported Items</h2>
-            <span className="count-badge">{filteredItems.length} items</span>
-          </div>
-
-          {/* Items Grid */}
-          <div className="items-grid">
-            {loading ? (
-              <div className="loading-wrapper">
-                <div className="spinner"></div>
-              </div>
-            ) : filteredItems.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">📭</div>
-                <h3>No items found</h3>
-                <p>
-                  {searchQuery
-                    ? `No results for "${searchQuery}". Try a different search.`
-                    : 'No items have been reported yet. Be the first to report one!'}
-                </p>
-              </div>
-            ) : (
-              filteredItems.map((item) => (
-                <ItemCard
-                  key={item._id}
-                  item={item}
-                  currentUserId={user?.id}
-                  onEdit={setEditItem}
-                  onDelete={handleDelete}
-                />
-              ))
-            )}
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
 
-      {/* Edit Modal */}
       {editItem && (
         <EditModal
           item={editItem}
           onClose={() => setEditItem(null)}
-          onSuccess={() => {
-            setEditItem(null);
-            fetchItems();
-          }}
+          onSuccess={() => { setEditItem(null); fetchItems(); }}
         />
       )}
-    </div>
+    </>
   );
 }
