@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+// Local dev → /api is proxied to localhost:5000 via vite.config.js
+// Production (Vercel) → VITE_API_URL must be set in Vercel env variables
 const api = axios.create({
-  baseURL: 'https://lost-and-found-management-system-t0cs.onrender.com/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
